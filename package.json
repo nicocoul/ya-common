@@ -1,24 +1,17 @@
 {
-  "name": "yaps-node",
-  "version": "0.2.0",
+  "name": "ya-common",
+  "version": "0.1.3",
   "description": "",
   "main": "index.js",
   "author": "Nicolas Coulon <coulon_nicolas@hotmail.com> (https://github.com/nicocoul)",
   "keywords": [
-    "rpc",
-    "pubsub",
-    "socket",
-    "tcp",
-    "tls",
-    "websocket",
-    "networking",
-    "realtime",
-    "server",
-    "client"
+    "ya",
+    "ya-pubsub",
+    "ya-rcc"
   ],
-  "homepage": "https://github.com/nicocoul/yaps-node",
+  "homepage": "https://github.com/nicocoul/ya-common",
   "bugs": {
-    "url": "https://github.com/nicocoul/yaps-node/issues"
+    "url": "https://github.com/nicocoul/ya-common/issues"
   },
   "directories": {
     "lib": "./lib"
@@ -46,7 +39,6 @@
     "eslint-plugin-promise": "^5.1.1",
     "jest": "^27.0.4",
     "jest-cli": "^27.0.4",
-    "jest-junit": "^12.2.0",
-    "mustache": "^4.2.0"
+    "jest-junit": "^12.2.0"
   }
 }

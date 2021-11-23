@@ -10,3 +10,5 @@ build/
 tests/
 tmp/
 obsolete/
+cli/
+coverage/

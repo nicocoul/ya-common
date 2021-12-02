@@ -1,4 +1,4 @@
-const { Readable, Writable, PassThrough } = require('stream')
+const { Writable, PassThrough } = require('stream')
 const { duplexify } = require('../lib/common')
 const { v4: uuidv4 } = require('uuid')
 
@@ -34,16 +34,6 @@ function newDummyChannel () {
 function pause (time) {
   return delay(() => { }, time)
 }
-// TODO: use Readable.from() instead
-function newArrayReadable (array) {
-  const a = [...array]
-  const result = new Readable({ objectMode: true })
-  result._read = () => {
-    const el = a.shift()
-    if (el !== undefined) { result.push(el) } else { result.push(null) }
-  }
-  return result
-}
 
 function newAccumulator () {
   const data = []
@@ -61,7 +51,6 @@ function newAccumulator () {
 module.exports = {
   delay,
   pause,
-  newArrayReadable,
   newAccumulator,
   newDummyChannel
 }

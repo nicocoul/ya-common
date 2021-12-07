@@ -72,7 +72,7 @@ test('it sends messages to the server when the server starts listening afterward
   })
   server.listen(port)
 
-  await pause(50)
+  await pause(100)
   server.close()
   channel.kill()
   expect(received).toHaveLength(1)

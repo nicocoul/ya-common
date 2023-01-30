@@ -1,12 +1,8 @@
-const { pause, newAccumulator } = require('../common')
+const { newAccumulator } = require('../common')
 const { Readable } = require('stream')
-const {
-  newDecoder,
-  newEncoder,
-  encode
-} = require('../../lib/codecs/123')
+const { newDecoder, newEncoder, encode } = require('../../lib/codecs/123')
 
-const bytes = [1, 0, 0, 0, 1, 2, 49, 3]
+const bytesValidJSON = [1, 0, 0, 0, 1, 2, 49, 3]
 const bytesInvalidFooter = [1, 0, 0, 0, 1, 2, 49, 4]
 const bytesInvalidHeader = [2, 0, 0, 0, 1, 2, 49, 3]
 const bytesInvalidJSON = [1, 0, 0, 0, 1, 2, 0, 3]
@@ -14,9 +10,10 @@ const bytesInvalidJSON = [1, 0, 0, 0, 1, 2, 0, 3]
 test('it encodes one object', async () => {
   const acc = newAccumulator()
   Readable.from([1], { objectMode: true }).pipe(newEncoder()).pipe(acc)
-  await pause(0)
-  expect(acc.data()).toHaveLength(1)
-  expect(acc.data()).toStrictEqual([Buffer.from(bytes)])
+  setImmediate(() => {
+    expect(acc.data()).toHaveLength(1)
+    expect(acc.data()).toStrictEqual([Buffer.from(bytesValidJSON)])
+  })
 })
 
 test('it encodes multiple objects', async () => {
@@ -26,30 +23,33 @@ test('it encodes multiple objects', async () => {
     encoder.write(1)
   }
   encoder.pipe(acc)
-  await pause(0)
-  expect(acc.data()).toHaveLength(1000)
-  expect(acc.data()[0]).toStrictEqual(Buffer.from(bytes))
+  setImmediate(() => {
+    expect(acc.data()).toHaveLength(1000)
+    expect(acc.data()[0]).toStrictEqual(Buffer.from(bytesValidJSON))
+  })
 })
 
 test('it decodes one buffer', async () => {
   const acc = newAccumulator()
   const decoder = newDecoder()
-  Readable.from([Buffer.from(bytes)]).pipe(decoder).pipe(acc)
-  await pause(0)
-  expect(acc.data()).toHaveLength(1)
-  expect(acc.data()).toStrictEqual([1])
+  Readable.from([Buffer.from(bytesValidJSON)]).pipe(decoder).pipe(acc)
+  setImmediate(() => {
+    expect(acc.data()).toHaveLength(1)
+    expect(acc.data()).toStrictEqual([1])
+  })
 })
 
 test('it decodes multiple buffers', async () => {
   const acc = newAccumulator()
   const decoder = newDecoder()
   for (let i = 0; i < 1000; i++) {
-    decoder.write(Buffer.from(bytes))
+    decoder.write(Buffer.from(bytesValidJSON))
   }
   decoder.pipe(acc)
-  await pause(0)
-  expect(acc.data()).toHaveLength(1000)
-  expect(acc.data()[0]).toStrictEqual(1)
+  setImmediate(() => {
+    expect(acc.data()).toHaveLength(1000)
+    expect(acc.data()[0]).toStrictEqual(1)
+  })
 })
 
 test('it decodes when message is split after the header', async () => {
@@ -58,10 +58,10 @@ test('it decodes when message is split after the header', async () => {
   const decoder = newDecoder()
   decoder.pipe(acc)
   decoder.write(validBuffer.slice(0, validBuffer.length - 2))
-  await pause(10)
   decoder.write(validBuffer.slice(validBuffer.length - 2))
-  await pause(10)
-  expect(acc.data()).toStrictEqual(['hello world'])
+  setImmediate(() => {
+    expect(acc.data()).toStrictEqual(['hello world'])
+  })
 })
 
 test('it decodes when message is split in the header', async () => {
@@ -70,10 +70,10 @@ test('it decodes when message is split in the header', async () => {
   const decoder = newDecoder()
   decoder.pipe(acc)
   decoder.write(validBuffer.slice(0, 3))
-  await pause(10)
   decoder.write(validBuffer.slice(3))
-  await pause(10)
-  expect(acc.data()).toStrictEqual(['hello world'])
+  setImmediate(() => {
+    expect(acc.data()).toStrictEqual(['hello world'])
+  })
 })
 
 test('it decodes when invalid header', async () => {
@@ -83,14 +83,12 @@ test('it decodes when invalid header', async () => {
   decoder.pipe(acc)
 
   decoder.write(Buffer.from(bytesInvalidHeader))
-  await pause(10)
   decoder.write(validBuffer)
-  await pause(10)
   decoder.write(Buffer.from(bytesInvalidHeader))
-  await pause(10)
   decoder.write(validBuffer)
-  await pause(10)
-  expect(acc.data()).toStrictEqual(['hello world', 'hello world'])
+  setImmediate(() => {
+    expect(acc.data()).toStrictEqual(['hello world', 'hello world'])
+  })
 })
 
 test('it decodes when invalid footer', async () => {
@@ -100,14 +98,12 @@ test('it decodes when invalid footer', async () => {
   decoder.pipe(acc)
 
   decoder.write(Buffer.from(bytesInvalidFooter))
-  await pause(10)
   decoder.write(validBuffer)
-  await pause(10)
   decoder.write(Buffer.from(bytesInvalidFooter))
-  await pause(10)
   decoder.write(validBuffer)
-  await pause(10)
-  expect(acc.data()).toStrictEqual(['hello world', 'hello world'])
+  setImmediate(() => {
+    expect(acc.data()).toStrictEqual(['hello world', 'hello world'])
+  })
 })
 
 test('it decodes multiples messages at once', async () => {
@@ -125,8 +121,28 @@ test('it decodes multiples messages at once', async () => {
   const decoder = newDecoder()
   decoder.pipe(acc)
   decoder.write(validBuffer)
-  await pause(10)
   decoder.write(encode('hello world4'))
-  await pause(10)
-  expect(acc.data()).toStrictEqual(['hello world1', 'hello world2', 'hello world3', 'hello world4'])
+  setImmediate(() => {
+    expect(acc.data()).toStrictEqual(['hello world1', 'hello world2', 'hello world3', 'hello world4'])
+  })
 })
+
+test('it decodes when writing buffer of lenght 1', async () => {
+  const decoder = newDecoder()
+  const arr = [
+    ...bytesInvalidHeader,
+    ...bytesInvalidJSON,
+    ...bytesValidJSON,
+    ...bytesInvalidFooter
+  ]
+  arr.forEach((b) => {
+    decoder.write(Buffer.from([b]))
+  })
+  const acc = newAccumulator()
+  decoder.pipe(acc)
+  setImmediate(() => {
+    expect(acc.data()).toStrictEqual([1])
+  })
+
+})
+/**/
